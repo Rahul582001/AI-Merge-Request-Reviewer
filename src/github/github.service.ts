@@ -7,7 +7,6 @@ export class GithubService {
   async github(data: any) {
     try {
       console.log(data);
-      //consoled the data
       return 'PR webhook event triggered';
     } catch (error: unknown) {
       return InternalServerErrorResponse(
