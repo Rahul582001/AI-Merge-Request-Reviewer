@@ -8,16 +8,16 @@ import {
 
 @Entity('pull_requests')
 export class PullRequestEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'pull_request_id' })
   id!: number;
 
-  @Column({ unique: true })
+  @Column({ name: 'github_pr_id', unique: true })
   githubPrId!: number;
 
-  @Column()
+  @Column({ name: 'repository_id' })
   repositoryId!: number;
 
-  @Column()
+  @Column({ name: 'pr_number' })
   prNumber!: number;
 
   @Column()
@@ -29,10 +29,10 @@ export class PullRequestEntity {
   @Column()
   author!: string;
 
-  @Column()
+  @Column({ name: 'source_branch' })
   sourceBranch!: string;
 
-  @Column()
+  @Column({ name: 'target_branch' })
   targetBranch!: string;
 
   @Column()
@@ -41,9 +41,9 @@ export class PullRequestEntity {
   @Column({ default: false })
   merged!: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }

@@ -20,7 +20,7 @@ export class RepositoryEntity {
   @Column()
   name!: string;
 
-  @Column({ name: 'default_batch' })
+  @Column({ name: 'default_branch' })
   defaultBranch!: string;
 
   @Column({ default: true, name: 'is_active' })
