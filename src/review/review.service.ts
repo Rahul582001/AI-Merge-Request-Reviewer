@@ -68,7 +68,7 @@ export class ReviewService {
         review.id,
         commonMessages.REVIEW_SAVED_SUCCESSFULLY,
       );
-    } catch (error) {
+    } catch (error: unknown) {
       return InternalServerErrorResponse(
         error instanceof Error ? error.message : String(error),
         commonMessages.INTERNAL_SERVER_ERROR,
