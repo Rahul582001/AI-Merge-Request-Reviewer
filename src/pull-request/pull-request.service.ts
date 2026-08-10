@@ -60,7 +60,7 @@ export class PullRequestService {
         savedPullRequest.id,
         commonMessages.PR_SAVED_SUCCESSFULLY,
       );
-    } catch (error) {
+    } catch (error:unknown) {
       return InternalServerErrorResponse(
         error instanceof Error ? error.message : String(error),
         commonMessages.INTERNAL_SERVER_ERROR,
