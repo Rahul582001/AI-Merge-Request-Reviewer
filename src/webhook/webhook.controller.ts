@@ -1,4 +1,4 @@
-import { Body, Controller, Post,Headers } from '@nestjs/common';
+import { Body, Controller, Post, Headers } from '@nestjs/common';
 import { WebhookService } from './webhook.service';
 import {
   ApiBody,
@@ -38,7 +38,7 @@ export class WebhookController {
     @Body() payload: Record<string, any>,
   ) {
     try {
-      return await this.webhookService.processGithubWebhook(event,payload);
+      return await this.webhookService.processGithubWebhook(event, payload);
     } catch (error: unknown) {
       return InternalServerErrorResponse(
         error instanceof Error ? error.message : String(error),
