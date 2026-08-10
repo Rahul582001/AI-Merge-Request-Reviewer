@@ -56,6 +56,10 @@ export class LlmService {
           stream: false,
         });
 
+        console.log('========== OLLAMA RAW RESPONSE ==========');
+        console.log(response.data.response);
+        console.log('==========================================');
+
         try {
           reviews.push(JSON.parse(response.data.response));
         } catch {
