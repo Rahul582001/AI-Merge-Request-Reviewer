@@ -59,7 +59,7 @@ export class GithubService {
 
       console.log('========== CHANGED FILES ==========');
       console.log(JSON.stringify(changedFiles, null, 2));
-      console.log('===================================');
+      console.log('=================================');
 
       /*
        * STEP 4
