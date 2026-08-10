@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
+
 import { RepositoryService } from 'src/repository/repository.service';
 import { PullRequestService } from 'src/pull-request/pull-request.service';
 import { LlmService } from 'src/llm/llm.service';
 import { ReviewService } from 'src/review/review.service';
+
 import { commonMessages } from 'src/common/messages/common.messages';
 import { InternalServerErrorResponse } from 'src/common/utils/Responses.util';
 
@@ -20,7 +22,7 @@ export class GithubService {
     try {
       const { action, repository, pull_request } = payload;
 
-      // Process only the events that require a new AI review
+      // Process only events that require an AI review
       if (!['opened', 'synchronize', 'reopened'].includes(action)) {
         return {
           message: `Ignoring ${action} event`,
@@ -58,8 +60,10 @@ export class GithubService {
       );
 
       console.log('========== CHANGED FILES ==========');
+
       console.log(JSON.stringify(changedFiles, null, 2));
-      console.log('=================================');
+
+      console.log('===================================');
 
       /*
        * STEP 4
@@ -68,7 +72,9 @@ export class GithubService {
       const aiReviews: any = await this.llmService.reviewFiles(changedFiles);
 
       console.log('========== AI REVIEWS =============');
+
       console.log(JSON.stringify(aiReviews, null, 2));
+
       console.log('===================================');
 
       /*
@@ -88,12 +94,13 @@ export class GithubService {
 
       /*
        * STEP 7
-       * Post AI review to GitHub
+       * Create inline GitHub review
        */
-      await this.postReviewComment(
+      const githubReview = await this.createPullRequestReview(
         repository.owner.login,
         repository.name,
         pull_request.number,
+        pull_request.head.sha,
         finalReview,
       );
 
@@ -103,8 +110,12 @@ export class GithubService {
        */
       return {
         message: 'Pull request reviewed successfully',
+
         pullRequestId,
+
         reviewId: reviewResponse.data,
+
+        githubReviewId: githubReview.id,
       };
     } catch (error: unknown) {
       return InternalServerErrorResponse(
@@ -135,9 +146,13 @@ export class GithubService {
         .filter((file: any) => file.patch)
         .map((file: any) => ({
           fileName: file.filename,
+
           language: file.filename.split('.').pop() ?? 'unknown',
+
           patch: file.patch,
+
           additions: file.additions,
+
           deletions: file.deletions,
         }));
     } catch (error: unknown) {
@@ -177,14 +192,32 @@ export class GithubService {
     };
   }
 
-  async postReviewComment(
+  async createPullRequestReview(
     owner: string,
     repo: string,
     pullNumber: number,
+    commitId: string,
     review: any,
   ) {
     try {
-      let commentBody = `## 🤖 AI Merge Request Review
+      const comments =
+        review.comments
+          ?.filter(
+            (comment: any) =>
+              comment.fileName && comment.lineNumber && comment.comment,
+          )
+          .map((comment: any) => ({
+            path: comment.fileName,
+
+            line: comment.lineNumber,
+
+            side: 'RIGHT',
+
+            body: this.formatReviewComment(comment),
+          })) ?? [];
+
+      const body = `
+## 🤖 AI Merge Request Review
 
 **Overall Score:** ${review.overallScore}/100
 
@@ -192,49 +225,28 @@ export class GithubService {
 
 ${review.summary}
 
+${
+  comments.length
+    ? `AI identified ${comments.length} issue(s) in the changed code.`
+    : '### ✅ No Issues Found\n\nNo meaningful issues were identified in the changed code.'
+}
 `;
-
-      if (review.comments?.length) {
-        commentBody += `### Findings
-
-`;
-
-        review.comments.forEach((comment: any, index: number) => {
-          commentBody += `### ${index + 1}. ${comment.severity}
-
-**File:** \`${comment.fileName}\`
-
-**Line:** ${comment.lineNumber}
-
-${comment.comment}
-
-`;
-
-          if (comment.suggestedCode) {
-            commentBody += `**Suggested Code:**
-
-\`\`\`
-${comment.suggestedCode}
-\`\`\`
-
-`;
-          }
-        });
-      } else {
-        commentBody += `### ✅ No Issues Found
-
-No code issues were identified in the changed files.
-`;
-      }
 
       const response = await axios.post(
-        `${process.env.GITHUB_API}/repos/${owner}/${repo}/issues/${pullNumber}/comments`,
+        `${process.env.GITHUB_API}/repos/${owner}/${repo}/pulls/${pullNumber}/reviews`,
         {
-          body: commentBody,
+          commit_id: commitId,
+
+          body,
+
+          event: 'COMMENT',
+
+          comments,
         },
         {
           headers: {
             Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+
             Accept: 'application/vnd.github+json',
           },
         },
@@ -244,5 +256,24 @@ No code issues were identified in the changed files.
     } catch (error: unknown) {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
+  }
+
+  private formatReviewComment(comment: any) {
+    let body = `### ${comment.severity}
+
+${comment.comment}`;
+
+    if (comment.suggestedCode) {
+      body += `
+
+**Suggested Code:**
+
+\`\`\`${comment.language ?? ''}
+${comment.suggestedCode}
+\`\`\`
+`;
+    }
+
+    return body;
   }
 }
