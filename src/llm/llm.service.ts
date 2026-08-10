@@ -64,7 +64,7 @@ export class LlmService {
       }
 
       return reviews;
-    } catch (error) {
+    } catch (error:unknown) {
       return InternalServerErrorResponse(
         error instanceof Error ? error.message : String(error),
         commonMessages.INTERNAL_SERVER_ERROR,
