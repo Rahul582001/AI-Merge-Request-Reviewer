@@ -19,9 +19,6 @@ export class GithubService {
   async handlePullRequestEvent(payload: any) {
     try {
       const { action, repository, pull_request } = payload;
-      console.log('pull_request: ', pull_request);
-      console.log('action: ', action);
-      console.log('repository: ', repository);
 
       // Process only the events that require a new AI review
       if (!['opened', 'synchronize', 'reopened'].includes(action)) {
@@ -60,11 +57,19 @@ export class GithubService {
         pull_request.number,
       );
 
+      console.log('========== CHANGED FILES ==========');
+      console.log(JSON.stringify(changedFiles, null, 2));
+      console.log('===================================');
+
       /*
        * STEP 4
        * Send changed files to Ollama
        */
       const aiReviews: any = await this.llmService.reviewFiles(changedFiles);
+
+      console.log('========== AI REVIEWS =============');
+      console.log(JSON.stringify(aiReviews, null, 2));
+      console.log('===================================');
 
       /*
        * STEP 5
@@ -119,6 +124,11 @@ export class GithubService {
             Accept: 'application/vnd.github+json',
           },
         },
+      );
+
+      console.log(
+        'GitHub files API response:',
+        JSON.stringify(response.data, null, 2),
       );
 
       return response.data
