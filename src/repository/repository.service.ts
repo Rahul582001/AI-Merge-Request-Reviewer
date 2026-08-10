@@ -38,6 +38,7 @@ export class RepositoryService {
         name,
         defaultBranch: default_branch,
       });
+      console.log('savedRepositoryID: ', savedRepository.id);
 
       return SuccessResponse(
         savedRepository.id,

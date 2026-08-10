@@ -54,6 +54,8 @@ export class PullRequestService {
         merged,
       });
 
+      console.log(pullRequest.id);
+
       return SuccessResponse(
         savedPullRequest.id,
         commonMessages.PR_SAVED_SUCCESSFULLY,

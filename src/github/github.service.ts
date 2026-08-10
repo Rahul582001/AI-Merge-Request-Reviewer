@@ -20,8 +20,8 @@ export class GithubService {
     try {
       const { action, repository, pull_request } = payload;
       console.log('pull_request: ', pull_request);
-      console.log('repository: ', repository);
       console.log('action: ', action);
+      console.log('repository: ', repository);
 
       // Process only the events that require a new AI review
       if (!['opened', 'synchronize', 'reopened'].includes(action)) {
