@@ -56,6 +56,10 @@ export class LlmService {
           stream: false,
         });
 
+        console.log('========== OLLAMA RAW RESPONSE ==========');
+        console.log(response.data.response);
+        console.log('==========================================');
+
         try {
           reviews.push(JSON.parse(response.data.response));
         } catch {
@@ -64,7 +68,7 @@ export class LlmService {
       }
 
       return reviews;
-    } catch (error:unknown) {
+    } catch (error: unknown) {
       return InternalServerErrorResponse(
         error instanceof Error ? error.message : String(error),
         commonMessages.INTERNAL_SERVER_ERROR,
