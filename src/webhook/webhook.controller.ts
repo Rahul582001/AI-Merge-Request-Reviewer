@@ -38,7 +38,7 @@ export class WebhookController {
     @Body() payload: Record<string, any>,
   ) {
     try {
-      return this.webhookService.processGithubWebhook(event, payload);
+      return await this.webhookService.processGithubWebhook(event, payload);
     } catch (error: unknown) {
       return InternalServerErrorResponse(
         error instanceof Error ? error.message : String(error),
